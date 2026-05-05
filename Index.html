@@ -419,8 +419,29 @@ select {
 <div class="toast" id="toast"></div>
 
 <script>
+// ════════════════════════════════
+// API 설정 - 배포 후 SCRIPT_URL 교체
+// ════════════════════════════════
+const SCRIPT_URL = https://script.google.com/macros/s/AKfycbxMWGKQ4SyniriE2NbHStOqkehwf_w1jw5enqlgk_d87R6HlLIL46ISXtLAsVFBUke9/exec // /exec URL 입력
+
+async function apiGet(params) {
+  const url = SCRIPT_URL + '?' + new URLSearchParams(params);
+  const res = await fetch(url, { redirect: 'follow' });
+  return res.json();
+}
+
+async function apiPost(data) {
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(data),
+    redirect: 'follow'
+  });
+  return res.json();
+}
+
 // ── 상태 ──
-let currentData = null;  // 현재 선택된 개체
+let currentData = null;
 let selectedVet = '';
 
 // ── 탭 전환 ──
@@ -443,12 +464,11 @@ function doSearch() {
   const container = document.getElementById('search-results');
   container.innerHTML = '<div class="loading"><div class="spinner"></div>조회 중...</div>';
 
-  google.script.run
-    .withSuccessHandler(renderResults)
-    .withFailureHandler(err => {
+  apiGet({ action: 'search', rep: rep })
+    .then(renderResults)
+    .catch(err => {
       container.innerHTML = '<div class="empty"><div class="icon">⚠️</div>' + err.message + '</div>';
-    })
-    .searchByRep(rep);
+    });
 }
 
 function renderResults(data) {
@@ -721,28 +741,15 @@ function submitCorrect() {
     loc:       (document.getElementById('c-loc2')||{value:currentData.loc||''}).value.trim(),
   };
 
-  google.script.run
-    .withSuccessHandler(res => {
+  apiPost({ action: 'register', ...payload })
+    .then(res => {
       btn.disabled = false; btn.textContent = '✅ 저장';
       if (res.success) {
         toast('✅ 기록 정정 완료');
-        correctMode = false;
-        // currentData 업데이트
-        currentData.aiDate  = payload.aiDate;
-        currentData.aiCount = payload.aiCount;
-        currentData.vet     = payload.vet;
-        currentData.semen   = payload.semen;
-        currentData.split   = payload.split;
-        currentData.ovary   = payload.ovary;
-        currentData.note    = payload.note;
-        toggleCorrectMode(); // 뷰 모드로 복귀
-      } else { toast('❌ ' + res.message); }
-    })
-    .withFailureHandler(err => {
-      btn.disabled = false; btn.textContent = '✅ 저장';
-      toast('❌ ' + err.message);
-    })
-    .registerAI(payload);
+        Object.assign(currentData, payload);
+        toggleCorrectMode();
+      } else { toast('❌ ' + (res.error||res.message)); }
+    }).catch(err => { btn.disabled=false; btn.textContent='✅ 저장'; toast('❌ '+err.message); });
 }
 
 function toggleCorrectForm() { toggleCorrectMode(); }
@@ -784,21 +791,12 @@ function submitCorrect() {
     loc:       (document.getElementById('c-loc2')||{value:currentData.loc||''}).value.trim(),
   };
 
-  google.script.run
-    .withSuccessHandler(res => {
+  apiPost({ action: 'register', ...payload })
+    .then(res => {
       btn.disabled = false; btn.textContent = '✅ 정정 저장';
-      if (res.success) {
-        toast('✅ 기록 정정 완료');
-        document.getElementById('correct-form').style.display = 'none';
-      } else {
-        toast('❌ ' + res.message);
-      }
-    })
-    .withFailureHandler(err => {
-      btn.disabled = false; btn.textContent = '✅ 정정 저장';
-      toast('❌ ' + err.message);
-    })
-    .registerAI(payload);
+      if (res.success) { toast('✅ 기록 정정 완료'); }
+      else { toast('❌ ' + (res.error||res.message)); }
+    }).catch(err => { btn.disabled=false; btn.textContent='✅ 정정 저장'; toast('❌ '+err.message); });
 }
 
 function openEdit(i, data, correctMode) {
@@ -816,10 +814,10 @@ function openEdit(i, data, correctMode) {
     updateDue();
   } else {
     // 새 수정입력: 오늘 날짜, 횟수 +1
-    google.script.run.withSuccessHandler(today => {
-      document.getElementById('f-aidate').value = today;
+    apiGet({ action: 'today' }).then(res => {
+      document.getElementById('f-aidate').value = res.today || '';
       updateDue();
-    }).getToday();
+    });
     document.getElementById('f-count').value = (parseInt(d.aiCount) || 0) + 1;
   }
   // 비육전환 체크박스 항상 초기화
@@ -917,23 +915,12 @@ function submitAI() {
     loc:       document.getElementById('f-loc').value.trim(),
   };
 
-  google.script.run
-    .withSuccessHandler(res => {
-      btn.disabled = false;
-      btn.textContent = '✅ 수정 등록';
-      if (res.success) {
-        toast('✅ 수정 등록 완료!');
-        setTimeout(() => backToSearch(), 1500);
-      } else {
-        toast('❌ 오류: ' + res.message);
-      }
-    })
-    .withFailureHandler(err => {
-      btn.disabled = false;
-      btn.textContent = '✅ 수정 등록';
-      toast('❌ ' + err.message);
-    })
-    .registerAI(payload);
+  apiPost({ action: 'register', ...payload })
+    .then(res => {
+      btn.disabled = false; btn.textContent = '✅ 수정 등록';
+      if (res.success) { toast('✅ 수정 등록 완료!'); setTimeout(() => backToSearch(), 1500); }
+      else { toast('❌ ' + (res.error||res.message)); }
+    }).catch(err => { btn.disabled=false; btn.textContent='✅ 수정 등록'; toast('❌ '+err.message); });
 }
 
 function backToSearch() {
@@ -953,17 +940,11 @@ function saveLocation() {
   if (!locEl) return;
   const loc = locEl.value.trim();
   if (!loc) { toast('위치를 입력해주세요'); return; }
-  google.script.run
-    .withSuccessHandler(res => {
-      if (res.success) {
-        currentData.loc = loc;
-        toast('✅ 위치 저장 완료: ' + loc);
-      } else {
-        toast('❌ ' + res.message);
-      }
-    })
-    .withFailureHandler(err => toast('❌ ' + err.message))
-    .saveLocation(currentData.rowIndex, loc);
+  apiPost({ action: 'saveLocation', rowIndex: currentData.rowIndex, loc: loc })
+    .then(res => {
+      if (res.success) { currentData.loc = loc; toast('✅ 위치 저장 완료: ' + loc); }
+      else { toast('❌ ' + (res.error||res.message)); }
+    }).catch(err => toast('❌ ' + err.message));
 }
 
 // ── 신규입력 ──
@@ -1018,21 +999,16 @@ function submitNew() {
   const btn = document.getElementById('btn-new-submit');
   btn.disabled = true; btn.textContent = '등록 중...';
 
-  google.script.run
-    .withSuccessHandler(res => {
+  apiPost({ action: 'registerNew', farm: farmName, loc, his, rep, note })
+    .then(res => {
       btn.disabled = false; btn.textContent = '✅ 신규 등록';
-      if (res.success) {
-        toast('✅ 신규 등록 완료!');
-        clearNewForm();
-      } else {
-        toast('❌ ' + res.message);
-      }
+      if (res.success) { toast('✅ 신규 등록 완료!'); clearNewForm(); }
+      else { toast('❌ ' + (res.error || res.message)); }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       btn.disabled = false; btn.textContent = '✅ 신규 등록';
       toast('❌ ' + err.message);
-    })
-    .registerNew({ farm: farmName, loc, his, rep, note });
+    });
 }
 
 // ── 토스트 ──
@@ -1050,12 +1026,11 @@ function doFarmSearch() {
   if (!farm) { toast('농장을 선택하세요'); return; }
   const container = document.getElementById('farm-results');
   container.innerHTML = '<div class="loading"><div class="spinner"></div>조회 중...</div>';
-  google.script.run
-    .withSuccessHandler(renderFarmResults)
-    .withFailureHandler(err => {
+  apiGet({ action: 'farm', farm: farm, filter: filter })
+    .then(renderFarmResults)
+    .catch(err => {
       container.innerHTML = '<div class="empty"><div class="icon">⚠️</div>' + err.message + '</div>';
-    })
-    .getFarmAnimals(farm, filter);
+    });
 }
 
 function renderFarmResults(data) {
@@ -1099,8 +1074,7 @@ function openEditFromFarm(i) {
 window.onload = function() {
   document.getElementById('rep-input').focus();
   // 농장 목록 로드
-  google.script.run
-    .withSuccessHandler(farms => {
+  apiGet({ action: 'farms' }).then(farms => {
       const sel = document.getElementById('farm-select');
       farms.forEach(f => {
         const opt = document.createElement('option');
