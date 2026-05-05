@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#1B5E20"/>
+<title>🐄 백산새별 인공수정 관리</title>
+<style>
+/* 강제 모바일 레이아웃 */
+html {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  font-size: 16px !important;
+}
+body {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  min-width: unset !important;
+}
+* {
+  max-width: 100vw;
+  word-break: break-word;
+}
+img, table, iframe {
+  max-width: 100% !important;
+}
+
+:root {
+  --green:    #1B5E20;
+  --green2:   #2E7D32;
+  --green3:   #E8F5E9;
+  --green4:   #C8E6C9;
+  --white:    #FFFFFF;
+  --gray:     #F5F5F5;
+  --gray2:    #E0E0E0;
+  --text:     #1a2e22;
+  --text2:    #555;
+  --blue:     #1565C0;
+  --blue_bg:  #E3F2FD;
+  --red:      #C62828;
+  --red_bg:   #FFEBEE;
+  --amber:    #E65100;
+  --amber_bg: #FFF9C4;
+  --radius:   12px;
+  --shadow:   0 2px 12px rgba(0,0,0,.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { font-size: 16px; }
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+body {
+  font-family: -apple-system, 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  background: var(--gray);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  overscroll-behavior: none;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* 안드로이드 터치 최적화 */
+button, .vet-btn, .btn-search, .btn-detail, .btn-edit, .btn-back, .btn-submit, .tab {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;  /* 더블탭 줌 방지 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+input:not([type=checkbox]), select, textarea {
+  -webkit-appearance: none;
+  border-radius: var(--radius);
+}
+input[type=checkbox] {
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
+  width: 20px !important;
+  height: 20px !important;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23555' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+/* 스크롤 부드럽게 */
+.page { -webkit-overflow-scrolling: touch; overflow-y: auto; }
+/* 탭바 그림자 */
+.tab-bar { box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+/* 버튼 활성 피드백 */
+.btn-search:active, .btn-submit:active { opacity: .8; transform: scale(.98); }
+.btn-detail:active, .btn-edit:active   { opacity: .8; }
+.vet-btn:active { transform: scale(.96); }
+.tab:active { opacity: .7; }
+
+/* 모바일 최적화 */
+@media (max-width: 480px) {
+  .hdr h1       { font-size: 17px; }
+  .card         { padding: 14px; }
+  .result-card  { padding: 12px; }
+  .result-top   { font-size: 14px; }
+  .detail-row   { grid-template-columns: 1fr 1fr; }
+  .detail-val   { font-size: 13px; }
+  .form-input   { font-size: 16px; } /* 줌 방지 */
+  .search-input { font-size: 20px; }
+  .vet-btn      { padding: 10px 6px; font-size: 12px; }
+  .bottom-btns  { position: sticky; bottom: 0; background: var(--gray); padding-top: 8px; padding-bottom: env(safe-area-inset-bottom, 8px); }
+  .tab          { font-size: 13px; padding: 12px 0; }
+  .date-badge   { font-size: 11px; padding: 3px 8px; }
+  .result-btns  { gap: 6px; }
+  .btn-detail, .btn-edit { padding: 10px 8px; font-size: 12px; }
+  .hdr { padding: 14px 14px 12px; }
+  .search-input { letter-spacing: .15em; }
+}
+
+/* 안드로이드 전용 강제 모바일 레이아웃 */
+@media screen and (max-width: 768px) {
+  html, body { width: 100% !important; overflow-x: hidden !important; }
+  .page { max-width: 100% !important; padding: 12px !important; }
+  .tab-bar { width: 100%; }
+  .tab { font-size: 13px !important; }
+}
+
+/* 안드로이드 키보드 올라올 때 하단 여백 */
+@media (max-height: 500px) {
+  .hdr { padding: 8px 14px; }
+  .tab { padding: 8px 0; }
+  .card { padding: 10px; margin-bottom: 8px; }
+  .bottom-btns { margin-top: 10px; }
+}
+
+/* ── 탭 ── */
+.tab-bar { display: flex; background: var(--green); padding: 0; position: sticky; top: 0; z-index: 99; -webkit-overflow-scrolling: touch; }
+.tab { flex: 1; padding: 14px 0; text-align: center; color: rgba(255,255,255,.6); font-size: 14px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all .2s; }
+.tab.active { color: #fff; border-bottom-color: #A5D6A7; }
+
+/* ── 헤더 ── */
+.hdr { background: var(--green); padding: 20px 16px 16px; color: #fff; }
+.hdr h1 { font-size: 20px; font-weight: 700; }
+.hdr p  { font-size: 12px; opacity: .7; margin-top: 2px; }
+
+/* ── 페이지 ── */
+.page { display: none; padding: 16px; max-width: 640px; margin: 0 auto; width: 100%; }
+.page.active { display: block; }
+
+/* ── 카드 ── */
+.card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 14px; }
+.card-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
+
+/* ── 조회 입력 ── */
+.search-row { display: flex; gap: 8px; }
+.search-input { flex: 1; padding: 14px 16px; border: 2px solid var(--gray2); border-radius: 10px; font-size: 18px; font-weight: 700; font-family: inherit; outline: none; text-align: center; letter-spacing: .1em; }
+.search-input:focus { border-color: var(--green2); }
+.btn-search { padding: 14px 20px; background: var(--green); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.btn-search:hover { background: var(--green2); }
+
+/* ── 결과 카드 ── */
+.result-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 10px; border-left: 4px solid var(--green2); }
+.result-top { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.result-sub { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+.result-dates { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.date-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.date-badge.ai  { background: var(--blue_bg); color: var(--blue); }
+.date-badge.due { background: var(--green3); color: var(--green); }
+.date-badge.pg  { background: var(--amber_bg); color: var(--amber); }
+.result-btns { display: flex; gap: 8px; }
+.btn-detail { flex: 1; padding: 10px; border: 2px solid var(--gray2); border-radius: 8px; background: var(--white); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-edit   { flex: 1; padding: 10px; border: none; border-radius: 8px; background: var(--green); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-detail:hover { border-color: var(--green2); color: var(--green); }
+.btn-edit:hover   { background: var(--green2); }
+
+/* ── 상세조회 ── */
+.detail-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.detail-item.empty { visibility: hidden; }
+.detail-item { background: var(--gray); border-radius: 8px; padding: 10px 12px; }
+.detail-label { font-size: 10px; color: var(--text2); font-weight: 600; text-transform: uppercase; margin-bottom: 3px; }
+.detail-val   { font-size: 14px; font-weight: 700; color: var(--text); }
+.detail-val.green { color: var(--green); }
+.detail-val.red   { color: var(--red); }
+.detail-val.blue  { color: var(--blue); }
+.detail-val.amber { color: var(--amber); }
+
+/* ── 입력 폼 ── */
+.form-row { margin-bottom: 14px; }
+.form-label { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; }
+.form-input { width: 100%; padding: 12px 14px; border: 2px solid var(--gray2); border-radius: 10px; font-size: 14px; font-family: inherit; outline: none; background: var(--white); }
+.form-input:focus { border-color: var(--green2); }
+.form-hint  { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+/* 수정사 버튼 */
+.vet-row { display: flex; gap: 8px; }
+.vet-btn { flex: 1; padding: 11px; border: 2px solid var(--gray2); border-radius: 10px; background: var(--white); color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; }
+.vet-btn.on { border-color: var(--green2); background: var(--green3); color: var(--green); }
+
+/* 예상 분만일 배너 */
+.due-banner { background: var(--green3); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.due-banner .label { font-size: 12px; color: var(--text2); }
+.due-banner .date  { font-size: 16px; font-weight: 700; color: var(--green); }
+
+/* 개체 정보 배너 */
+.info-banner { background: var(--green); color: #fff; border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
+.info-banner .name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.info-banner .sub  { font-size: 12px; opacity: .8; }
+
+/* 하단 버튼 */
+.bottom-btns { display: flex; gap: 10px; margin-top: 20px; margin-bottom: 30px; }
+.btn-back   { flex: 1; padding: 14px; border: 2px solid var(--gray2); border-radius: 10px; background: var(--white); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-submit { flex: 2; padding: 14px; border: none; border-radius: 10px; background: var(--green); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-back:hover   { border-color: var(--green2); }
+.btn-submit:hover { background: var(--green2); }
+.btn-submit:disabled { background: #aaa; cursor: not-allowed; }
+
+/* 로딩 / 빈 상태 */
+.loading { text-align: center; padding: 40px; color: var(--text2); font-size: 14px; }
+.spinner { width: 28px; height: 28px; border: 3px solid var(--gray2); border-top-color: var(--green2); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty { text-align: center; padding: 40px 20px; color: var(--text2); }
+.empty .icon { font-size: 36px; margin-bottom: 10px; }
+
+/* 토스트 */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 24px; border-radius: 24px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+.toast.show { opacity: 1; }
+
+/* 구분선 */
+.divider { height: 1px; background: var(--gray2); margin: 14px 0; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>🐄 백산새별 인공수정 관리</h1>
+  <p>인공수정 기록 조회 · 입력 · 농장별 현황</p>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('search')">🔍 조회</div>
+  <div class="tab" onclick="switchTab('farm')">🏡 농장별</div>
+  <div class="tab" onclick="switchTab('new')">➕ 신규입력</div>
+</div>
+
+<!-- ════════════════ 조회 탭 ════════════════ -->
+<div id="tab-search" class="page active">
+  <div class="card">
+    <div class="card-title">대표번호로 조회</div>
+    <div class="search-row">
+      <input class="search-input" id="rep-input" type="text" maxlength="4"
+             placeholder="0000" inputmode="numeric"
+             onkeydown="if(event.key==='Enter') doSearch()"/>
+      <button class="btn-search" onclick="doSearch()">조회</button>
+    </div>
+  </div>
+
+  <div id="search-results"></div>
+</div>
+
+<!-- ════════════════ 상세조회 (서브페이지) ════════════════ -->
+<div id="tab-detail" class="page">
+  <div class="info-banner" id="detail-banner">
+    <div class="name" id="detail-name">—</div>
+    <div class="sub"  id="detail-sub">—</div>
+  </div>
+
+  <div class="card">
+    <div id="detail-grid"></div>
+  </div>
+  <div class="bottom-btns">
+    <button class="btn-back" id="btn-detail-back" onclick="backToSearch()">← 돌아가기</button>
+    <button class="btn-detail" id="btn-correct-toggle" onclick="toggleCorrectMode()" style="flex:1.2;padding:14px;border:2px solid var(--amber);border-radius:10px;background:#fff;color:var(--amber);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">📝 기록정정</button>
+    <button class="btn-edit" id="btn-correct-save" onclick="submitCorrect()" style="display:none;flex:1.2;padding:14px;border:none;border-radius:10px;background:var(--amber);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✅ 저장</button>
+    <button class="btn-edit" id="btn-new-ai" onclick="goEditFromDetail()" style="flex:1.2;padding:14px;border:none;border-radius:10px;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✏️ 수정입력</button>
+  </div>
+</div>
+
+<!-- ════════════════ 수정 입력 탭 ════════════════ -->
+<div id="tab-input" class="page">
+  <div class="info-banner" id="edit-banner">
+    <div class="name" id="edit-name">—</div>
+    <div class="sub"  id="edit-sub">—</div>
+  </div>
+
+  <div class="card">
+    <div class="form-row">
+      <label class="form-label">수정일자</label>
+      <input class="form-input" id="f-aidate" type="date" oninput="updateDue()"/>
+      <div class="due-banner" id="due-banner" style="display:none">
+        <span class="label">예상 분만일 (수정일+285일)</span>
+        <span class="date" id="due-date">—</span>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">수정횟수</label>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input class="form-input" id="f-count" type="number" min="1" max="20" placeholder="1" style="flex:1"/>
+        <label style="display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;font-weight:600;color:var(--red);cursor:pointer;flex-shrink:0;padding:10px 12px;border:2px solid var(--red_bg);border-radius:10px;background:var(--red_bg);">
+          <input type="checkbox" id="f-biuk" style="width:18px;height:18px;cursor:pointer;accent-color:var(--red);" onchange="toggleBiuk(this)"/>
+          🔴 비육전환
+        </label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="form-row">
+      <label class="form-label">수정사</label>
+      <div class="vet-row">
+        <button class="vet-btn" onclick="pickVet(this,'김상협')">김상협</button>
+        <button class="vet-btn" onclick="pickVet(this,'곽상현')">곽상현</button>
+        <button class="vet-btn" onclick="pickVet(this,'기타')">기타</button>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">정액코드 / 분할 / 농장정액</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap;">
+        <input class="form-input" id="f-semen" type="text" placeholder="정액코드" style="flex:2"/>
+        <input class="form-input" id="f-split" type="text" placeholder="분할" style="flex:1"/>
+        <label style="display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;flex-shrink:0;">
+          <input type="checkbox" id="f-farmsemen" style="width:18px;height:18px;cursor:pointer;accent-color:var(--green2)"/>
+          농장정액
+        </label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="form-row">
+      <label class="form-label">난소상태</label>
+      <input class="form-input" id="f-ovary" type="text" placeholder="난소상태 입력"/>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">비고</label>
+      <input class="form-input" id="f-note" type="text" placeholder="비고"/>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="form-row">
+      <label class="form-label">위치</label>
+      <input class="form-input" id="f-loc" type="text" placeholder="위치"/>
+    </div>
+  </div>
+
+  <div class="bottom-btns">
+    <button class="btn-back" onclick="backToSearch()">← 돌아가기</button>
+    <button class="btn-submit" id="btn-submit" onclick="submitAI()">✅ 수정 등록</button>
+  </div>
+</div>
+
+<!-- ════════════════ 농장별 탭 ════════════════ -->
+<div id="tab-farm" class="page">
+  <div class="card">
+    <div class="card-title">농장별 조회</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <select id="farm-select" class="form-input" style="flex:2;font-weight:700;color:var(--green);">
+        <option value="">농장 선택...</option>
+      </select>
+      <select id="farm-filter" class="form-input" style="flex:1;">
+        <option value="전체">전체</option>
+        <option value="임신중">임신중</option>
+        <option value="그외">그 외</option>
+      </select>
+    </div>
+    <button class="btn-search" style="width:100%" onclick="doFarmSearch()">조회</button>
+  </div>
+  <div id="farm-results"></div>
+</div>
+
+<!-- ════════════════ 신규입력 탭 ════════════════ -->
+<div id="tab-new" class="page">
+  <div class="card">
+    <div class="card-title">신규 개체 등록</div>
+
+    <div class="form-row">
+      <label class="form-label">농장명</label>
+      <div style="display:flex;gap:8px;">
+        <select id="n-farm-sel" class="form-input" style="flex:1;" onchange="onFarmSelChange(this)">
+          <option value="">농장 선택...</option>
+        </select>
+      </div>
+      <input id="n-farm-custom" class="form-input" type="text" placeholder="새 농장명 직접 입력"
+             style="margin-top:8px;display:none;"/>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">위치 <span style="font-weight:400;color:var(--text2)">(선택)</span></label>
+      <input class="form-input" id="n-loc" type="text" placeholder="위치 (선택)"/>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">이력번호 <span id="n-his-count" style="font-weight:400;color:var(--text2);font-size:11px;">(0자리)</span></label>
+      <input class="form-input" id="n-his" type="text" placeholder="이력번호 9자리" inputmode="numeric" maxlength="12"/>
+      <div class="form-hint" id="n-rep-preview" style="color:var(--green);font-weight:700;font-size:14px;margin-top:6px;min-height:20px;"></div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">비고 <span style="font-weight:400;color:var(--text2)">(선택)</span></label>
+      <input class="form-input" id="n-note" type="text" placeholder="비고 (선택)"/>
+    </div>
+  </div>
+
+  <div class="bottom-btns">
+    <button class="btn-back" onclick="clearNewForm()">🔄 초기화</button>
+    <button class="btn-submit" id="btn-new-submit" onclick="submitNew()">✅ 신규 등록</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── 상태 ──
+let currentData = null;  // 현재 선택된 개체
+let selectedVet = '';
+
+// ── 탭 전환 ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['search','farm','new'][i] === tab);
+  });
+  ['tab-search','tab-input','tab-farm','tab-detail','tab-new'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ── 조회 ──
+function doSearch() {
+  const rep = document.getElementById('rep-input').value.trim();
+  if (!rep) { toast('대표번호를 입력하세요'); return; }
+
+  const container = document.getElementById('search-results');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>조회 중...</div>';
+
+  google.script.run
+    .withSuccessHandler(renderResults)
+    .withFailureHandler(err => {
+      container.innerHTML = '<div class="empty"><div class="icon">⚠️</div>' + err.message + '</div>';
+    })
+    .searchByRep(rep);
+}
+
+function renderResults(data) {
+  const container = document.getElementById('search-results');
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="icon">🔍</div><div>조회 결과가 없습니다</div></div>';
+    return;
+  }
+
+  container.innerHTML = data.map((d, i) => {
+    const pg1badge = d.pg1.toUpperCase() === 'O' ? `<span class="date-badge pg">1차✅ ${d.pg1date}</span>` :
+                     d.pg1.toUpperCase() === 'X' ? `<span class="date-badge" style="background:var(--red_bg);color:var(--red)">1차❌</span>` : '';
+    const pg2badge = d.pg2.toUpperCase() === 'O' ? `<span class="date-badge" style="background:#C8E6C9;color:var(--green)">2차✅ ${d.pg2date}</span>` : '';
+    return `
+    <div class="result-card">
+      <div class="result-top">${d.farm} ${d.loc} &nbsp;|&nbsp; 대표 <b>${d.rep}</b></div>
+      <div class="result-sub">이력번호: ${d.his}</div>
+      <div class="result-dates">
+        ${d.aiDate ? `<span class="date-badge ai">수정일 ${d.aiDate}</span>` : ''}
+        ${d.due    ? `<span class="date-badge due">분만예정 ${d.due}</span>` : ''}
+        ${pg1badge}${pg2badge}
+      </div>
+      <div class="result-btns">
+        <button class="btn-detail" onclick="openDetail(${i})">상세조회</button>
+        <button class="btn-edit"   onclick="openEdit(${i}, null, false)">✏️ 수정입력</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  window._searchData = data;
+}
+
+// ── 상세조회 ──
+function openDetail(i) {
+  const d = window._searchData[i];
+  currentData = d;
+
+  document.getElementById('detail-name').textContent = d.farm + ' ' + d.loc + '  |  대표 ' + d.rep;
+  document.getElementById('detail-sub').textContent  = '이력번호: ' + d.his;
+
+
+  const pg1c = d.pg1.toUpperCase()==='O' ? 'green' : d.pg1.toUpperCase()==='X' ? 'red' : '';
+  const pg2c = d.pg2.toUpperCase()==='O' ? 'green' : d.pg2.toUpperCase()==='X' ? 'red' : '';
+  const farmS = (d.farmSemen===true||d.farmSemen==='true'||d.farmSemen==='TRUE') ? '✅' : '—';
+
+  // 3열 행 구성
+  const rows = [
+    [ ['최근수정일', d.aiDate||'—', 'blue'], ['수정횟수', d.aiCount ? d.aiCount+'회' : '—', ''], ['수정사', d.vet||'—', ''] ],
+    [ ['정액코드', d.semen||'—', ''], ['분할', d.split||'—', ''], ['농장정액', farmS, ''] ],
+    [ ['1차감정', d.pg1||'—', pg1c], ['감정자', d.pg1vet||'—', ''], ['감정일자', d.pg1date||'—', ''] ],
+    [ ['2차감정', d.pg2||'—', pg2c], ['감정자', d.pg2vet||'—', ''], ['감정일자', d.pg2date||'—', ''] ],
+    [ ['분만예정일', d.due||'—', d.due?'green':''], ['분만일', d.calv||'—', ''], null ],
+    [ ['난소상태', d.ovary||'—', ''], ['비고', d.note||'—', ''], null ],
+    [ ['동기화', d.sync||'—', ''], ['메모', d.memo||'—', ''], null ],
+  ];
+
+  function cell(c) {
+    if (!c) return '<div class="detail-item" style="visibility:hidden"></div>';
+    return '<div class="detail-item"><div class="detail-label">'+c[0]+'</div><div class="detail-val '+c[2]+'">'+c[1]+'</div></div>';
+  }
+
+  window._detailRows = rows;
+  renderDetailGrid(false);
+
+  // 탭 전환
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  ['tab-search','tab-input','tab-farm','tab-detail','tab-new'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById('tab-detail').classList.add('active');
+}
+
+function goEditFromDetail() {
+  openEdit(null, currentData, false);
+}
+
+// ── 수정 입력 ──
+function goCorrectFromDetail() {
+  openEdit(null, currentData, true);
+}
+
+let selectedVetC = '';
+let correctMode = false;
+
+// ── 상세조회 그리드 렌더링 (뷰/편집 모드) ──
+function renderDetailGrid(editMode) {
+  const d = currentData;
+  const pg1c = d.pg1.toUpperCase()==='O' ? 'green' : d.pg1.toUpperCase()==='X' ? 'red' : '';
+  const pg2c = d.pg2.toUpperCase()==='O' ? 'green' : d.pg2.toUpperCase()==='X' ? 'red' : '';
+  const isFarmS = d.farmSemen===true || d.farmSemen==='true' || d.farmSemen==='TRUE';
+
+  function viewCell(c) {
+    if (!c) return '<div class="detail-item" style="visibility:hidden"></div>';
+    return '<div class="detail-item"><div class="detail-label">'+c[0]+'</div><div class="detail-val '+c[2]+'">'+c[1]+'</div></div>';
+  }
+
+  if (!editMode) {
+    const rows = window._detailRows;
+    document.getElementById('detail-grid').innerHTML = rows.map(function(row) {
+      return '<div class="detail-row">' + row.map(viewCell).join('') + '</div>';
+    }).join('');
+    return;
+  }
+
+  // 편집 모드
+  function inp(id, val, type) {
+    var v = (val || '').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    return '<input id="'+id+'" type="'+(type||'text')+'" value="'+v+'" style="width:100%;padding:6px 8px;border:1.5px solid var(--amber);border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#fffdf7;"/>';
+  }
+
+  function editCell(label, inputHtml) {
+    return '<div class="detail-item"><div class="detail-label" style="color:var(--amber)">'+label+'</div>'+inputHtml+'</div>';
+  }
+
+  // 수정사 버튼 - data-vet 속성 사용 (따옴표 이스케이프 문제 회피)
+  var vetHTML = '<div class="vet-row" style="gap:4px;" id="c-vet-row">';
+  ['김상협','곽상현','기타'].forEach(function(v) {
+    vetHTML += '<button class="vet-btn c-vet'+(d.vet===v?' on':'')+'" data-vet="'+v+'" style="padding:6px 8px;font-size:11px;">'+v+'</button>';
+  });
+  vetHTML += '</div>';
+
+  var farmChk = '<label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" id="c-farmsemen"'+(isFarmS?' checked':'')+' style="width:18px;height:18px;accent-color:var(--green2);"/> 농장정액</label>';
+
+  document.getElementById('detail-grid').innerHTML =
+    '<div class="detail-row">'+
+      editCell('최근수정일', inp('c-aidate', d.aiDate, 'date'))+
+      editCell('수정횟수',   inp('c-count',  d.aiCount, 'number'))+
+      editCell('수정사',     vetHTML)+
+    '</div>'+
+    '<div class="detail-row">'+
+      editCell('정액코드', inp('c-semen', d.semen))+
+      editCell('분할',     inp('c-split', d.split))+
+      editCell('농장정액', farmChk)+
+    '</div>'+
+    '<div class="detail-row">'+
+      editCell('1차감정',
+        '<div style="display:flex;gap:5px;">'+
+        '<button class="vet-btn c-pg1'+(d.pg1.toUpperCase()==='O'?' on':'')+'" data-pg="pg1" data-val="O" style="padding:5px 8px;font-size:12px;">O</button>'+
+        '<button class="vet-btn c-pg1'+(d.pg1.toUpperCase()==='X'?' on':'')+'" data-pg="pg1" data-val="X" style="padding:5px 8px;font-size:12px;">X</button>'+
+        '<button class="vet-btn c-pg1'+(d.pg1===''?' on':'')+'" data-pg="pg1" data-val="" style="padding:5px 8px;font-size:12px;">—</button>'+
+        '</div>')+
+      editCell('1차감정자',
+        '<div style="display:flex;gap:4px;" id="c-pg1vet-row">'+
+        '<button class="vet-btn c-pg1vet'+(d.pg1vet==='김상협'?' on':'')+'" data-pgvet="pg1vet" data-val="김상협" style="padding:4px 6px;font-size:11px;">김상협</button>'+
+        '<button class="vet-btn c-pg1vet'+(d.pg1vet==='곽상현'?' on':'')+'" data-pgvet="pg1vet" data-val="곽상현" style="padding:4px 6px;font-size:11px;">곽상현</button>'+
+        '</div>')+
+      editCell('1차감정일', inp('c-pg1date', d.pg1date))+
+    '</div>'+
+    '<div class="detail-row">'+
+      editCell('2차감정',
+        '<div style="display:flex;gap:5px;">'+
+        '<button class="vet-btn c-pg2'+(d.pg2.toUpperCase()==='O'?' on':'')+'" data-pg="pg2" data-val="O" style="padding:5px 8px;font-size:12px;">O</button>'+
+        '<button class="vet-btn c-pg2'+(d.pg2.toUpperCase()==='X'?' on':'')+'" data-pg="pg2" data-val="X" style="padding:5px 8px;font-size:12px;">X</button>'+
+        '<button class="vet-btn c-pg2'+(d.pg2===''?' on':'')+'" data-pg="pg2" data-val="" style="padding:5px 8px;font-size:12px;">—</button>'+
+        '</div>')+
+      editCell('2차감정자',
+        '<div style="display:flex;gap:4px;" id="c-pg2vet-row">'+
+        '<button class="vet-btn c-pg2vet'+(d.pg2vet==='김상협'?' on':'')+'" data-pgvet="pg2vet" data-val="김상협" style="padding:4px 6px;font-size:11px;">김상협</button>'+
+        '<button class="vet-btn c-pg2vet'+(d.pg2vet==='곽상현'?' on':'')+'" data-pgvet="pg2vet" data-val="곽상현" style="padding:4px 6px;font-size:11px;">곽상현</button>'+
+        '</div>')+
+      editCell('2차감정일', inp('c-pg2date', d.pg2date))+
+    '</div>'+
+    '<div class="detail-row">'+
+      viewCell(['분만예정일', d.due||'—', d.due?'green':''])+
+      viewCell(['분만일', d.calv||'—', ''])+
+      '<div class="detail-item" style="visibility:hidden"></div>'+
+    '</div>'+
+    '<div class="detail-row">'+
+      editCell('난소상태', inp('c-ovary', d.ovary))+
+      editCell('비고',     inp('c-note',  d.note))+
+      '<div class="detail-item" style="visibility:hidden"></div>'+
+    '</div>'+
+    '<div class="detail-row">'+
+      editCell('동기화', inp('c-sync', d.sync))+
+      editCell('메모',   inp('c-memo', d.memo))+
+      editCell('위치',   inp('c-loc2', d.loc))+
+    '</div>';
+
+  // 수정사 버튼 이벤트 - data-vet 방식
+  selectedVetC = d.vet || '';
+  document.getElementById('c-vet-row').addEventListener('click', function(e) {
+    var btn = e.target.closest('.c-vet');
+    if (!btn) return;
+    document.querySelectorAll('.c-vet').forEach(function(b) { b.classList.remove('on'); });
+    btn.classList.add('on');
+    selectedVetC = btn.getAttribute('data-vet');
+  });
+
+  // 1차/2차 감정 버튼 이벤트
+  document.getElementById('detail-grid').addEventListener('click', function(e) {
+    // 감정 O/X 버튼
+    var btn = e.target.closest('[data-pg]');
+    if (btn) {
+      var pg = btn.getAttribute('data-pg');
+      document.querySelectorAll('.c-'+pg).forEach(function(b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+    }
+    // 감정자 버튼
+    var vetBtn = e.target.closest('[data-pgvet]');
+    if (vetBtn) {
+      var pgvet = vetBtn.getAttribute('data-pgvet');
+      document.querySelectorAll('.c-'+pgvet).forEach(function(b) { b.classList.remove('on'); });
+      vetBtn.classList.add('on');
+    }
+    if (!btn && !vetBtn) return;
+  });
+}
+
+function toggleCorrectMode() {
+  correctMode = !correctMode;
+  renderDetailGrid(correctMode);
+  const backBtn   = document.getElementById('btn-detail-back');
+  const toggleBtn = document.getElementById('btn-correct-toggle');
+  const saveBtn   = document.getElementById('btn-correct-save');
+  const newAiBtn  = document.getElementById('btn-new-ai');
+  if (correctMode) {
+    // 기록정정 모드: 돌아가기 숨김, 취소+저장만
+    if (backBtn) backBtn.style.display = 'none';
+    toggleBtn.textContent = '✖ 취소';
+    toggleBtn.style.borderColor = 'var(--gray2)';
+    toggleBtn.style.color = 'var(--text2)';
+    saveBtn.style.display = '';
+    newAiBtn.style.display = 'none';
+  } else {
+    // 뷰 모드: 돌아가기 복원
+    if (backBtn) backBtn.style.display = '';
+    toggleBtn.textContent = '📝 기록정정';
+    toggleBtn.style.borderColor = 'var(--amber)';
+    toggleBtn.style.color = 'var(--amber)';
+    saveBtn.style.display = 'none';
+    newAiBtn.style.display = '';
+  }
+}
+
+function pickVetC(btn, name) {
+  document.querySelectorAll('.c-vet').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  selectedVetC = name;
+}
+
+function submitCorrect() {
+  if (!currentData) return;
+  const btn = document.getElementById('btn-correct-save');
+  btn.disabled = true; btn.textContent = '저장 중...';
+
+  // 1차/2차 감정 선택값
+  var pg1btn = document.querySelector('.c-pg1.on');
+  var pg2btn = document.querySelector('.c-pg2.on');
+
+  const payload = {
+    rowIndex:  currentData.rowIndex,
+    isBiuk:    false,
+    aiDate:    document.getElementById('c-aidate').value,
+    aiCount:   document.getElementById('c-count').value,
+    vet:       selectedVetC,
+    semen:     document.getElementById('c-semen').value.trim(),
+    split:     document.getElementById('c-split').value.trim(),
+    farmSemen: document.getElementById('c-farmsemen').checked,
+    pg1:       pg1btn ? pg1btn.getAttribute('data-val') : currentData.pg1,
+    pg1vet:    (document.querySelector('.c-pg1vet.on') || {getAttribute:function(){return currentData.pg1vet;}}).getAttribute('data-val'),
+    pg1date:   (document.getElementById('c-pg1date')||{value:currentData.pg1date}).value,
+    pg2:       pg2btn ? pg2btn.getAttribute('data-val') : currentData.pg2,
+    pg2vet:    (document.querySelector('.c-pg2vet.on') || {getAttribute:function(){return currentData.pg2vet;}}).getAttribute('data-val'),
+    pg2date:   (document.getElementById('c-pg2date')||{value:currentData.pg2date}).value,
+    ovary:     document.getElementById('c-ovary').value.trim(),
+    note:      document.getElementById('c-note').value.trim(),
+    sync:      (document.getElementById('c-sync')||{value:''}).value.trim(),
+    memo:      (document.getElementById('c-memo')||{value:''}).value.trim(),
+    loc:       (document.getElementById('c-loc2')||{value:currentData.loc||''}).value.trim(),
+  };
+
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false; btn.textContent = '✅ 저장';
+      if (res.success) {
+        toast('✅ 기록 정정 완료');
+        correctMode = false;
+        // currentData 업데이트
+        currentData.aiDate  = payload.aiDate;
+        currentData.aiCount = payload.aiCount;
+        currentData.vet     = payload.vet;
+        currentData.semen   = payload.semen;
+        currentData.split   = payload.split;
+        currentData.ovary   = payload.ovary;
+        currentData.note    = payload.note;
+        toggleCorrectMode(); // 뷰 모드로 복귀
+      } else { toast('❌ ' + res.message); }
+    })
+    .withFailureHandler(err => {
+      btn.disabled = false; btn.textContent = '✅ 저장';
+      toast('❌ ' + err.message);
+    })
+    .registerAI(payload);
+}
+
+function toggleCorrectForm() { toggleCorrectMode(); }
+
+function pickVetC(btn, name) {
+  document.querySelectorAll('#correct-form .vet-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  selectedVetC = name;
+}
+
+function submitCorrect() {
+  if (!currentData) return;
+  const btn = document.getElementById('btn-correct-submit');
+  btn.disabled = true; btn.textContent = '저장 중...';
+
+  // 1차/2차 감정 선택값
+  var pg1btn = document.querySelector('.c-pg1.on');
+  var pg2btn = document.querySelector('.c-pg2.on');
+
+  const payload = {
+    rowIndex:  currentData.rowIndex,
+    isBiuk:    false,
+    aiDate:    document.getElementById('c-aidate').value,
+    aiCount:   document.getElementById('c-count').value,
+    vet:       selectedVetC,
+    semen:     document.getElementById('c-semen').value.trim(),
+    split:     document.getElementById('c-split').value.trim(),
+    farmSemen: document.getElementById('c-farmsemen').checked,
+    pg1:       pg1btn ? pg1btn.getAttribute('data-val') : currentData.pg1,
+    pg1vet:    (document.querySelector('.c-pg1vet.on') || {getAttribute:function(){return currentData.pg1vet;}}).getAttribute('data-val'),
+    pg1date:   (document.getElementById('c-pg1date')||{value:currentData.pg1date}).value,
+    pg2:       pg2btn ? pg2btn.getAttribute('data-val') : currentData.pg2,
+    pg2vet:    (document.querySelector('.c-pg2vet.on') || {getAttribute:function(){return currentData.pg2vet;}}).getAttribute('data-val'),
+    pg2date:   (document.getElementById('c-pg2date')||{value:currentData.pg2date}).value,
+    ovary:     document.getElementById('c-ovary').value.trim(),
+    note:      document.getElementById('c-note').value.trim(),
+    sync:      (document.getElementById('c-sync')||{value:''}).value.trim(),
+    memo:      (document.getElementById('c-memo')||{value:''}).value.trim(),
+    loc:       (document.getElementById('c-loc2')||{value:currentData.loc||''}).value.trim(),
+  };
+
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false; btn.textContent = '✅ 정정 저장';
+      if (res.success) {
+        toast('✅ 기록 정정 완료');
+        document.getElementById('correct-form').style.display = 'none';
+      } else {
+        toast('❌ ' + res.message);
+      }
+    })
+    .withFailureHandler(err => {
+      btn.disabled = false; btn.textContent = '✅ 정정 저장';
+      toast('❌ ' + err.message);
+    })
+    .registerAI(payload);
+}
+
+function openEdit(i, data, correctMode) {
+  const d = data || window._searchData[i];
+  currentData = d;
+
+  document.getElementById('edit-name').textContent = `${d.farm} ${d.loc}  |  대표 ${d.rep}`;
+  document.getElementById('edit-sub').textContent  = `이력번호: ${d.his}`;
+
+  // 기본값 설정
+  if (correctMode) {
+    // 기록정정: 기존 값 그대로
+    document.getElementById('f-aidate').value = d.aiDate || '';
+    document.getElementById('f-count').value  = d.aiCount || 1;
+    updateDue();
+  } else {
+    // 새 수정입력: 오늘 날짜, 횟수 +1
+    google.script.run.withSuccessHandler(today => {
+      document.getElementById('f-aidate').value = today;
+      updateDue();
+    }).getToday();
+    document.getElementById('f-count').value = (parseInt(d.aiCount) || 0) + 1;
+  }
+  // 비육전환 체크박스 항상 초기화
+  document.getElementById('f-biuk').checked = false;
+  toggleBiuk({checked: false});
+
+  if (correctMode) {
+    // 기록정정: 기존값 채우기
+    document.getElementById('f-semen').value = d.semen || '';
+    document.getElementById('f-split').value = d.split || '';
+    const isFarmSemen = d.farmSemen === true || d.farmSemen === 'true' || d.farmSemen === 'TRUE';
+    document.getElementById('f-farmsemen').checked = isFarmSemen;
+    document.getElementById('f-ovary').value = d.ovary || '';
+    document.getElementById('f-note').value  = d.note  || '';
+    document.getElementById('f-loc').value   = d.loc   || '';
+    // 수정사 버튼 선택
+    selectedVet = d.vet || '';
+    document.querySelectorAll('.vet-btn').forEach(b => {
+      b.classList.toggle('on', b.textContent.trim() === selectedVet);
+    });
+  } else {
+    // 새 수정입력: 빈값
+    document.getElementById('f-semen').value = '';
+    document.getElementById('f-split').value = '';
+    document.getElementById('f-farmsemen').checked = false;
+    document.getElementById('f-ovary').value = '';
+    document.getElementById('f-note').value  = d.note || '';
+    document.getElementById('f-loc').value   = d.loc  || '';
+    selectedVet = '';
+    document.querySelectorAll('.vet-btn').forEach(b => b.classList.remove('on'));
+  }
+
+  switchTab('input');
+}
+
+function pickVet(btn, name) {
+  document.querySelectorAll('.vet-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  selectedVet = name;
+}
+
+function toggleBiuk(cb) {
+  // 비육전환 체크 시 나머지 입력 비활성화
+  const disabled = cb.checked;
+  ['f-aidate','f-count','f-semen','f-split','f-farmsemen','f-ovary'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.disabled = disabled; el.style.opacity = disabled ? '.4' : '1'; }
+  });
+  document.querySelectorAll('.vet-btn').forEach(b => {
+    b.disabled = disabled; b.style.opacity = disabled ? '.4' : '1';
+  });
+}
+
+function updateDue() {
+  const val = document.getElementById('f-aidate').value;
+  const banner = document.getElementById('due-banner');
+  if (!val) { banner.style.display = 'none'; return; }
+  const d = new Date(val + 'T00:00:00');
+  d.setDate(d.getDate() + 285);
+  const dueStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('due-date').textContent = dueStr;
+  banner.style.display = 'flex';
+}
+
+function submitAI() {
+  const aiDate = document.getElementById('f-aidate').value;
+  const count  = document.getElementById('f-count').value;
+  const semen  = document.getElementById('f-semen').value.trim();
+
+  if (!currentData){ toast('조회 후 입력하세요'); return; }
+
+  const btn = document.getElementById('btn-submit');
+  const isBiuk = document.getElementById('f-biuk').checked;
+
+  if (!isBiuk) {
+    if (!aiDate)     { toast('수정일자를 입력하세요'); return; }
+    if (!selectedVet){ toast('수정사를 선택하세요'); return; }
+    if (!semen)      { toast('정액코드를 입력하세요'); return; }
+  }
+
+  btn.disabled = true;
+  btn.textContent = '등록 중...';
+
+  const payload = {
+    rowIndex:  currentData.rowIndex,
+    isBiuk:    isBiuk,
+    aiDate:    isBiuk ? '' : aiDate,
+    aiCount:   isBiuk ? '' : count,
+    vet:       isBiuk ? '' : selectedVet,
+    semen:     isBiuk ? '' : semen,
+    split:     isBiuk ? '' : document.getElementById('f-split').value.trim(),
+    farmSemen: isBiuk ? false : document.getElementById('f-farmsemen').checked,
+    ovary:     isBiuk ? '' : document.getElementById('f-ovary').value.trim(),
+    note:      document.getElementById('f-note').value.trim(),
+    loc:       document.getElementById('f-loc').value.trim(),
+  };
+
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false;
+      btn.textContent = '✅ 수정 등록';
+      if (res.success) {
+        toast('✅ 수정 등록 완료!');
+        setTimeout(() => backToSearch(), 1500);
+      } else {
+        toast('❌ 오류: ' + res.message);
+      }
+    })
+    .withFailureHandler(err => {
+      btn.disabled = false;
+      btn.textContent = '✅ 수정 등록';
+      toast('❌ ' + err.message);
+    })
+    .registerAI(payload);
+}
+
+function backToSearch() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab').classList.add('active');
+  ['tab-search','tab-input','tab-farm','tab-detail','tab-new'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  document.getElementById('tab-search').classList.add('active');
+}
+
+// ── 위치 저장 ──
+function saveLocation() {
+  if (!currentData) { toast('먼저 개체를 조회하세요'); return; }
+  const locEl = document.getElementById('f-loc');
+  if (!locEl) return;
+  const loc = locEl.value.trim();
+  if (!loc) { toast('위치를 입력해주세요'); return; }
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res.success) {
+        currentData.loc = loc;
+        toast('✅ 위치 저장 완료: ' + loc);
+      } else {
+        toast('❌ ' + res.message);
+      }
+    })
+    .withFailureHandler(err => toast('❌ ' + err.message))
+    .saveLocation(currentData.rowIndex, loc);
+}
+
+// ── 신규입력 ──
+function onFarmSelChange(sel) {
+  const custom = document.getElementById('n-farm-custom');
+  custom.style.display = sel.value === '__new__' ? 'block' : 'none';
+  if (sel.value !== '__new__') custom.value = '';
+}
+
+function clearNewForm() {
+  document.getElementById('n-farm-sel').value = '';
+  document.getElementById('n-farm-custom').value = '';
+  document.getElementById('n-farm-custom').style.display = 'none';
+  document.getElementById('n-loc').value = '';
+  document.getElementById('n-his').value = '';
+  document.getElementById('n-note').value = '';
+  document.getElementById('n-rep-preview').textContent = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const hisInput = document.getElementById('n-his');
+  if (hisInput) {
+    hisInput.addEventListener('input', function() {
+      const v = this.value.trim();
+      const prev  = document.getElementById('n-rep-preview');
+      const count = document.getElementById('n-his-count');
+      count.textContent = '(' + v.length + '자리)';
+      count.style.color = v.length === 9 ? 'var(--green)' : v.length > 9 ? 'var(--red)' : 'var(--text2)';
+      if (v.length >= 8) {
+        prev.textContent = '대표번호: ' + v.slice(4, 8);
+      } else {
+        prev.textContent = '';
+      }
+    });
+  }
+});
+
+function submitNew() {
+  const selVal    = document.getElementById('n-farm-sel').value;
+  const farmName  = selVal === '__new__'
+    ? document.getElementById('n-farm-custom').value.trim()
+    : selVal;
+  const loc  = document.getElementById('n-loc').value.trim();
+  const his  = document.getElementById('n-his').value.trim();
+  const note = document.getElementById('n-note').value.trim();
+
+  if (!farmName) { toast('농장명을 입력하세요'); return; }
+  if (!his)      { toast('개체번호를 입력하세요'); return; }
+
+  const rep = his.length >= 8 ? his.slice(4, 8) : his;
+
+  const btn = document.getElementById('btn-new-submit');
+  btn.disabled = true; btn.textContent = '등록 중...';
+
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false; btn.textContent = '✅ 신규 등록';
+      if (res.success) {
+        toast('✅ 신규 등록 완료!');
+        clearNewForm();
+      } else {
+        toast('❌ ' + res.message);
+      }
+    })
+    .withFailureHandler(err => {
+      btn.disabled = false; btn.textContent = '✅ 신규 등록';
+      toast('❌ ' + err.message);
+    })
+    .registerNew({ farm: farmName, loc, his, rep, note });
+}
+
+// ── 토스트 ──
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── 농장별 탭 ──
+function doFarmSearch() {
+  const farm   = document.getElementById('farm-select').value;
+  const filter = document.getElementById('farm-filter').value;
+  if (!farm) { toast('농장을 선택하세요'); return; }
+  const container = document.getElementById('farm-results');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>조회 중...</div>';
+  google.script.run
+    .withSuccessHandler(renderFarmResults)
+    .withFailureHandler(err => {
+      container.innerHTML = '<div class="empty"><div class="icon">⚠️</div>' + err.message + '</div>';
+    })
+    .getFarmAnimals(farm, filter);
+}
+
+function renderFarmResults(data) {
+  const container = document.getElementById('farm-results');
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="icon">🔍</div><div>해당 조건의 데이터가 없습니다</div></div>';
+    return;
+  }
+  container.innerHTML = data.map((d, i) => {
+    const pg1b = d.pg1.toUpperCase()==='O' ? '<span class="date-badge pg">1차✅</span>' :
+                 d.pg1.toUpperCase()==='X' ? '<span class="date-badge" style="background:var(--red_bg);color:var(--red)">1차❌</span>' : '';
+    const pg2b = d.pg2.toUpperCase()==='O' ? '<span class="date-badge" style="background:#C8E6C9;color:var(--green)">2차✅</span>' : '';
+    const dueb = d.due ? '<span class="date-badge due">분만예정 '+d.due+'</span>' : '';
+    return '<div class="result-card" style="border-left-color:'+(d.isPregnant?'var(--green2)':'var(--gray2)')+'">'+
+      '<div class="result-top">'+d.loc+' &nbsp;|&nbsp; 대표 <b>'+d.rep+'</b></div>'+
+      '<div class="result-sub">이력번호: '+d.his+'</div>'+
+      '<div class="result-dates">'+
+        (d.aiDate ? '<span class="date-badge ai">수정일 '+d.aiDate+'</span>' : '')+
+        dueb+pg1b+pg2b+
+      '</div>'+
+      '<div class="result-btns">'+
+        '<button class="btn-detail" onclick="openDetailFromFarm('+i+')">상세조회</button>'+
+        '<button class="btn-edit" onclick="openEditFromFarm('+i+')">✏️ 수정입력</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  window._farmData = data;
+}
+
+function openDetailFromFarm(i) {
+  window._searchData = window._farmData;
+  openDetail(i);
+}
+
+function openEditFromFarm(i) {
+  window._searchData = window._farmData;
+  openEdit(i, null, false);
+}
+
+// ── 초기화 ──
+window.onload = function() {
+  document.getElementById('rep-input').focus();
+  // 농장 목록 로드
+  google.script.run
+    .withSuccessHandler(farms => {
+      const sel = document.getElementById('farm-select');
+      farms.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = opt.textContent = f;
+        sel.appendChild(opt);
+      });
+      // 신규입력 탭 드롭다운도 채우기
+      const nSel = document.getElementById('n-farm-sel');
+      if (nSel) {
+        farms.forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = opt.textContent = f;
+          nSel.appendChild(opt);
+        });
+        // 직접입력 옵션 추가
+        const newOpt = document.createElement('option');
+        newOpt.value = '__new__'; newOpt.textContent = '+ 새 농장 직접 입력';
+        nSel.appendChild(newOpt);
+      }
+    })
+    .getFarmList();
+};
+</script>
+</body>
+</html>
