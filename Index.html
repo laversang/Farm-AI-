@@ -422,7 +422,7 @@ select {
 // ════════════════════════════════
 // API 설정 - 배포 후 SCRIPT_URL 교체
 // ════════════════════════════════
-const SCRIPT_URL = https://script.google.com/macros/s/AKfycbzJknoEL9t9HYyW5b-EqaHoeTMGNv2fzPBd1JqH2wVZPDGRopKlz7NsCaGypwL-5gTQ/exec
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJknoEL9t9HYyW5b-EqaHoeTMGNv2fzPBd1JqH2wVZPDGRopKlz7NsCaGypwL-5gTQ/exec'; // /exec URL 입력
 
 async function apiGet(params) {
   const url = SCRIPT_URL + '?' + new URLSearchParams(params);
